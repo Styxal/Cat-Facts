@@ -1,12 +1,10 @@
 import { Text, ScrollView } from "react-native";
-import { styles } from "./styles/home";
-import React from 'react';
+import { styles } from "../styles/home";
+import React, { useContext } from 'react';
 
-interface CatFactsIndexProps {
-    catFact: string;
-}
+export const CatFacts =  () => {
+    const { catFact } = useContext();
 
-export const CatFacts =  ({catFact}) => {
     return(
         <>
             <Text style={styles.title}>

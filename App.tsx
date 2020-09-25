@@ -1,41 +1,41 @@
 import React, { useState, useEffect } from 'react';
-import { View, Alert, Text, TouchableOpacity } from 'react-native';
-import Icon from 'react-native-vector-icons/FontAwesome';
+import { View, Alert, Text } from 'react-native';
 import AsyncStorage from '@react-native-community/async-storage';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
 import { styles } from './src/styles/home'
-import { CatFacts } from "./src/catFactsIndex";
+import {CatFactsHome} from "./src/pages/CatFactsHome";
+import {requestCatFact} from "./src/utils/catFactApiUtil";
 
 export default function App() {
     const [ catFact, setCatFact ] = useState({});
     const [ isLoading, setIsLoading ] = useState(false);
 
-    const url = 'https://cat-fact.herokuapp.com/facts/random?animal_type=cat&verified=true';
+    const Stack = createStackNavigator();
 
-    const storeData = async (value) => {
+    const storeData = (value) => {
         try {
-            await AsyncStorage.setItem('@storage_Key', value)
+            AsyncStorage.setItem('@storage_Key', value);
         } catch (e) {
-            // saving error
+            Alert.alert("error");
         }
     }
 
-    function requestCatFact() {
-        setIsLoading(true);
-        fetch(url, {method: "GET"})
-            .then((response) => {
-                return response.json()
-            })
-            .then((jsonData) => {
-                setIsLoading(false);
-                setCatFact(jsonData);
-
-            })
-            .catch((error) => Alert.alert(error))
-    }
+    const Context = React.createContext({catFact, setCatFact, isLoading, setIsLoading, requestCatFact, storeData });
 
     useEffect(() => {
         requestCatFact();
     }, []);
+
+    let Favourites = ({navigation}) => {
+        return (
+            <View style={styles.container}>
+                <Text>
+                    Favourites
+                </Text>
+            </View>
+        )
+    }
 
     if (isLoading) {
         return (
@@ -44,36 +44,17 @@ export default function App() {
             </View>
         );
     } else {
-        return <View style={styles.container}>
-            <CatFacts catFact={catFact.text} />
-            <View style={styles.rowContainer}>
-                <TouchableOpacity
-                    onPressIn={()=>requestCatFact()}
-                    style={styles.button}
-                >
-                    <Text style={styles.buttonText}>
-                        Get a cat fact!
-                    </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={styles.button}
-                    onPressIn={()=>{
-                        Alert.alert(catFact._id)
-                        storeData(catFact._id)
-                    }}
-                >
-                    <Icon style={styles.buttonText} name={"heart"}/>
-                </TouchableOpacity>
-            </View>
-            <TouchableOpacity style={styles.button}>
-                <Text style={styles.buttonText}>
-                    View Favourites
-                </Text>
-            </TouchableOpacity>
-        </View>
+        return (
+            <Context.Provider value={{ catFact, setCatFact, isLoading, setIsLoading, requestCatFact, storeData }}>
+                <NavigationContainer>
+                    <Stack.Navigator initialRouteName="Home">
+                        <Stack.Screen name="Home" component={CatFactsHome} />
+                        <Stack.Screen name="Favourites" component={Favourites} />
+                    </Stack.Navigator>
+                </NavigationContainer>
+            </Context.Provider>
+        )
     }
-
-
 };
 
 
